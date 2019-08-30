@@ -1,7 +1,7 @@
 """
-:class:`Maybe` forms the root type of an ADT. Values of type :class:`Maybe` are either instances of :class:`Some`, or
-are the singleton value `Empty`. As an ADT, this would typically be used with pattern matching, which doesn't exist in
-Python. Instead, use identity comparison with `Empty`. For example:
+:class:`Maybe` forms the root type of an ADT. Values of type :class:`Maybe` are either instances of :class:`Some` or
+:class:`Empty`. As an ADT, this would typically be used with pattern matching, which doesn't exist in Python. Instead,
+todo. For example:
 
     >>> def lookup(key: str, table: Mapping[str, int]) -> Maybe[int]:
     ...     return Some(table[key]) if key in table else Empty
@@ -10,7 +10,7 @@ Python. Instead, use identity comparison with `Empty`. For example:
     >>> lookup('cat', animals).map(str)
     Some('1')
     >>> maybe = lookup('fish', animals).map(str)
-    >>> if maybe is Empty:
+    >>> if maybe is Empty:  todo
     ...     print('I wonder where that fish has gone ...')
     I wonder where that fish has gone ...
 
@@ -40,7 +40,7 @@ class Maybe(ABC, Generic[T_co]):
     def map(self, fn: Callable[[T_co], U]) -> 'Maybe[U]':
         """
         If this is a :class:`Some`, apply the function ``fn`` to the contained value and return it in a :class:`Some`.
-        Else return :class:`Empty`.
+        Else return an :class:`Empty`.
 
         :param fn: The function to apply to the contained value.
         :return: A :class:`Maybe` formed by mapping `fn` over the contained value, if it exists.
@@ -50,10 +50,17 @@ class Maybe(ABC, Generic[T_co]):
     def flat_map(self, fn: Callable[[T_co], 'Maybe[U]']) -> 'Maybe[U]':
         """
         If this is a :class:`Some`, apply the function ``fn`` to the contained value and return the result. Else return
-        :class:`Empty`.
+        an :class:`Empty`.
 
         :param fn: The function to apply to the contained value.
         :return: A :class:`Maybe` formed by mapping `fn` over the contained value, if it exists.
+        """
+
+    def match(self, some: Callable[[T_co], U], empty: Callable[[], U]) -> U:
+        """
+        :param some:
+        :param empty:
+        :return:
         """
 
 
@@ -85,6 +92,9 @@ class Some(Maybe[T_co], Generic[T_co]):
         """
         return fn(self._o)
 
+    def match(self, some: Callable[[T_co], U], empty: Callable[[], U]) -> U:
+        return some(self._o)
+
     def __eq__(self, other: Any) -> bool:
         if type(other) == Some:
             return self._o == other.unwrap()
@@ -99,35 +109,35 @@ class Some(Maybe[T_co], Generic[T_co]):
 
 
 @final
-class _Empty(Maybe[NoReturn]):
+class Empty(Maybe[NoReturn]):
     def unwrap(self) -> NoReturn:
         """
         :raise ValueError: Always.
         """
         raise ValueError("No such value.")
 
-    def flat_map(self, fn: Callable[[T_co], 'Maybe[U]']) -> 'Empty':
-        """
-        :param fn: Unused.
-        :return: Empty
-        """
-        return Empty
-
     def map(self, fn: Callable[[T_co], U]) -> 'Empty':
         """
         :param fn: Unused.
-        :return: Empty
+        :return: An :class:`Empty`.
         """
-        return Empty
+        return Empty()
+
+    def flat_map(self, fn: Callable[[T_co], 'Maybe[U]']) -> 'Empty':
+        """
+        :param fn: Unused.
+        :return: An :class:`Empty`.
+        """
+        return Empty()
+
+    def match(self, some: Callable[[NoReturn], U], empty: Callable[[], U]) -> U:
+        return empty()
 
     def __eq__(self, other: Any) -> bool:
-        return True if other is Empty else NotImplemented
+        return True if type(other) == Empty else NotImplemented
 
     def __hash__(self) -> int:
         return 0
 
     def __repr__(self) -> str:
-        return 'Empty'
-
-
-Empty: Final[_Empty] = _Empty()
+        return 'Empty()'

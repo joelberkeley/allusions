@@ -13,14 +13,14 @@ def test_some__unwrap_returns_original_object(v) -> None:
 
 def test_empty__unwrap_raises_error() -> None:
     with pytest.raises(ValueError):
-        Empty.unwrap()
+        Empty().unwrap()
 
 
 T = TypeVar('T')
 U = TypeVar('U')
 
 
-def _map_test_cases() -> List[Tuple[T, Callable[[T], Any]]]:
+def _map_test_cases() -> List[Tuple[Any, Callable[[Any], Any]]]:
     return [
         (1, lambda x: x + 1),
         ('a', lambda s: s * 3)
@@ -35,20 +35,20 @@ def test_some__map(v, fn) -> None:
 
 @pytest.mark.parametrize('v, fn', _map_test_cases())
 def test_empty__map(v, fn) -> None:
-    assert Empty.map(fn) is Empty
+    assert Empty().map(fn) == Empty()
 
 
-def _flat_map_test_cases() -> List[Tuple[T, Callable[[T], Maybe[U]], Maybe[U]]]:
+def _flat_map_test_cases() -> List[Tuple[Any, Callable[[Any], Maybe[Any]], Maybe[Any]]]:
     return [
         (1, lambda x: Some(x + 1), Some(2)),
-        (1, lambda x: Empty, Empty)
+        (1, lambda x: Empty(), Empty())
         # todo more test cases?
     ]
 
 
 @pytest.mark.parametrize('v, fn, exp', [
     (1, lambda x: Some(x + 1), Some(2)),
-    (1, lambda x: Empty, Empty)
+    (1, lambda x: Empty(), Empty())
     # todo more test cases?
 ])
 def test_some__flat_map(v, fn, exp) -> None:
@@ -57,7 +57,17 @@ def test_some__flat_map(v, fn, exp) -> None:
 
 @pytest.mark.parametrize('_, fn, exp', _flat_map_test_cases())
 def test_empty__flat_map(_, fn, exp) -> None:
-    assert Empty.flat_map(fn) is Empty
+    assert Empty().flat_map(fn) == Empty()
+
+
+def test_some__match() -> None:
+    # todo more test cases
+    assert Some(1).match(some=lambda x: x + 1, empty=lambda: 0) == 2
+
+
+def test_empty__match() -> None:
+    # todo more test cases
+    assert Empty().match(some=lambda x: x + 1, empty=lambda: 0) == 0
 
 
 @pytest.mark.parametrize('v', primitives())
@@ -72,7 +82,7 @@ def test_some__eq_is_symmetric(first, second) -> None:
 
 
 def test_empty__eq_is_reflexive_and_symmetric() -> None:
-    assert Empty == Empty
+    assert Empty() == Empty()
 
 
 # todo test neq is symmetric
@@ -83,7 +93,7 @@ def test_empty__eq_is_reflexive_and_symmetric() -> None:
     (Some(1), 'Some(1)'),
     (Some('a'), "Some('a')"),
     (Some(1.), 'Some(1.0)'),
-    (Empty, 'Empty'),
+    (Empty(), 'Empty()'),
 ])
 def test_maybe__repr(maybe, exp) -> None:
     assert repr(maybe) == exp

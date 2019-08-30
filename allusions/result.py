@@ -12,20 +12,20 @@ T_co = TypeVar('T_co', covariant=True)
 E_co = TypeVar('E_co', covariant=True, bound=Exception)
 
 U = TypeVar('U')
-F = TypeVar('F')
+F = TypeVar('F', bound=Exception)
 
 
 class Result(ABC, Generic[T_co, E_co]):
     @abstractmethod
     def ok(self) -> Maybe[T_co]:
         """
-        :return: A :class:`Some` containing the value, if it exists, else `Empty`.
+        :return: A :class:`Some` containing the value, if it exists, else an :class:`Empty`.
         """
 
     @abstractmethod
     def err(self) -> Maybe[E_co]:
         """
-        :return: A :class:`Some` containing the error, if it exists, else `Empty`.
+        :return: A :class:`Some` containing the error, if it exists, else an :class:`Empty`.
         """
 
     @abstractmethod
@@ -53,7 +53,7 @@ class Ok(Result[T_co, NoReturn], Generic[T_co]):
         """
         self._o = o
 
-    def ok(self) -> T_co:
+    def ok(self) -> 'Some[T_co]':
         """
         :return: The contained value, wrapped in a :class:`Some`.
         """
@@ -61,9 +61,9 @@ class Ok(Result[T_co, NoReturn], Generic[T_co]):
 
     def err(self) -> Empty:
         """
-        :return: `Empty`.
+        :return: An :class:`Empty`.
         """
-        return Empty
+        return Empty()
 
     def map_ok(self, fn: Callable[[T_co], U]) -> 'Ok[U]':
         return Ok(fn(self._o))
@@ -94,15 +94,15 @@ class Err(Result[NoReturn, E_co], Generic[E_co]):
 
     def ok(self) -> Empty:
         """
-        :return: `Empty`.
+        :return: An :class:`Empty`.
         """
-        return Empty
+        return Empty()
 
-    def err(self) -> E_co:
+    def err(self) -> Some[E_co]:
         """
         :return: The contained error, wrapped in a :class:`Some`.
         """
-        return self._e
+        return Some(self._e)
 
     def map_ok(self, fn: Any) -> 'Err[E_co]':
         return self
