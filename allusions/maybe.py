@@ -16,10 +16,6 @@ Example usage::
     ... )
     'I wonder where that fish has gone ...'
 
-Aside from ``unwrap``, the API is purely functional.
-
-**Note:** The built-ins :builtin:`type` and :builtin:`isinstance` will not work with `Empty` since it is a value not a
-type.
 """
 from abc import abstractmethod, ABC
 from typing import TypeVar, Generic, NoReturn, Callable, Any, Mapping
@@ -73,6 +69,7 @@ class Maybe(ABC, Generic[T_co]):
 
 @final
 class Some(Maybe[T_co], Generic[T_co]):
+    """ Implementation of :class:`Result` for the case where a value exists. """
     def __init__(self, o: T_co):
         """
         :param o: The value to contain.
@@ -122,6 +119,7 @@ class Some(Maybe[T_co], Generic[T_co]):
 
 @final
 class Empty(Maybe[NoReturn]):
+    """ Implementation of :class:`Result` for the case where no value exists. """
     def unwrap(self) -> NoReturn:
         """
         :raise ValueError: Always.

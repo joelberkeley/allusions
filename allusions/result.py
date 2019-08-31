@@ -16,6 +16,7 @@ F = TypeVar('F', bound=Exception)
 
 
 class Result(ABC, Generic[T_co, E_co]):
+    """ A container for either the result of evaluating an expression, or the error that occurred during evaluation. """
     @abstractmethod
     def ok(self) -> Maybe[T_co]:
         """
@@ -47,9 +48,13 @@ class Result(ABC, Generic[T_co, E_co]):
     @abstractmethod
     def match(self, if_ok: Callable[[T_co], U], if_err: Callable[[E_co], U]) -> U:
         """
-        :param if_ok:
-        :param if_err:
-        :return:
+        Uses dynamic dispatch to mimic rudimentary pattern matching on this instance. If the instance on which
+        this is called contains a successfully computed value, call ``if_ok`` on that value, and return its result.
+        Else, call ``if_err`` on the error and return its result.
+
+        :param if_ok: The function to call on the successfully computed value, if it exists.
+        :param if_err: The function to call on the error, if it exists.
+        :return: The return value of whichever of ``if_ok`` and ``if_err`` were executed.
         """
 
 
@@ -74,12 +79,25 @@ class Ok(Result[T_co, NoReturn], Generic[T_co]):
         return Empty()
 
     def map_ok(self, fn: Callable[[T_co], U]) -> 'Ok[U]':
+        """
+        :param fn: The function to apply to the computed value.
+        :return: The result of calling ``fn`` on the computed value.
+        """
         return Ok(fn(self._o))
 
     def map_err(self, fn: Any) -> 'Ok[T_co]':
+        """
+        :param fn: Unused.
+        :return: The instance this method was called on, unaltered.
+        """
         return self
 
     def match(self, if_ok: Callable[[T_co], U], if_err: Callable[[E_co], U]) -> U:
+        """
+        :param if_ok: The function to call on the contained value.
+        :param if_err: Unused.
+        :return: The result of calling ``if_ok`` on the value.
+        """
         return if_ok(self._o)
 
     def __eq__(self, other: Any) -> bool:
@@ -116,12 +134,25 @@ class Err(Result[NoReturn, E_co], Generic[E_co]):
         return Some(self._e)
 
     def map_ok(self, fn: Any) -> 'Err[E_co]':
+        """
+        :param fn: Unused.
+        :return: The instance this method was called on, unaltered.
+        """
         return self
 
     def map_err(self, fn: Callable[[E_co], F]) -> 'Err[F]':
+        """
+        :param fn: The function to apply to the error.
+        :return: The result of applying ``fn`` the error.
+        """
         return Err(fn(self._e))
 
     def match(self, if_ok: Callable[[T_co], U], if_err: Callable[[E_co], U]) -> U:
+        """
+        :param if_ok: Unused.
+        :param if_err: The function to call on the error.
+        :return: The result of calling ``if_err`` on the error.
+        """
         return if_err(self._e)
 
     def __eq__(self, other: Any) -> bool:
