@@ -1,6 +1,28 @@
 """
-Note we don't provide an unwrap method. Users must call `Ok(1).ok().unwrap()`. This is to limit imperative functionality
-to `Maybe`.
+:class:`Result` forms the root type of an ADT. Values of type :class:`Result` are either instances of :class:`Ok` or
+:class:`Err`. Typically this class is used to encapsulate the outcome of evaluating an expression that may fail with an
+error. If evaluation succeeds, the result of the expression is contained within an :class:`Ok`. If it fails, the error
+that occurred is contained within an :class:`Err`.
+
+Example usage::
+
+    >>> class ParserError(ValueError): pass
+    ...
+    >>> def to_int(x: str) -> Result[int, ParserError]:
+    ...     try:
+    ...         return Ok(int(x))
+    ...     except ValueError as e:
+    ...         return Err(ParserError(x))
+    ...
+    >>> def inverse(i: int) -> Result[float, ZeroDivisionError]:
+    ...     return Ok(1./i) if i != 0 else Err(ZeroDivisionError)
+    ...
+    >>> results = [to_int(char).flat_map(inverse) for char in "158 �"]
+    >>> [res.ok().unwrap() for res in results if res.is_ok]
+    [1.0, 0.2, 0.125]
+
+Note :class:`Result` doesn't define an analogue to the ``unwrap`` method on :class:`Maybe`. Users must instead call
+e.g. `Ok(1).ok().unwrap()`. This is to limit imperative functionality to :class:`Maybe`.
 """
 from abc import abstractmethod, ABC
 from typing import Generic, TypeVar, Callable, NoReturn, Any
@@ -17,6 +39,13 @@ F = TypeVar('F', bound=Exception)
 
 class Result(ABC, Generic[T_co, E_co]):
     """ A container for either the result of evaluating an expression, or the error that occurred during evaluation. """
+    @property
+    @abstractmethod
+    def is_ok(self) -> bool:  # todo doesn't feel right - should drop this method?
+        """
+        :return: `True` if this instance represents a successfully computed value, else `False`.
+        """
+
     @abstractmethod
     def ok(self) -> Maybe[T_co]:
         """
@@ -46,6 +75,12 @@ class Result(ABC, Generic[T_co, E_co]):
         """
 
     @abstractmethod
+    # Exception type hints here should both be F, a supertype of E_co, but that's not possible in mypy, so we have to
+    # drop type safety and use Exception
+    def flat_map(self, fn: Callable[[T_co], 'Result[U, Exception]']) -> 'Result[U, Exception]':
+        """"""
+
+    @abstractmethod
     def match(self, if_ok: Callable[[T_co], U], if_err: Callable[[E_co], U]) -> U:
         """
         Uses dynamic dispatch to mimic rudimentary pattern matching on this instance. If the instance on which
@@ -60,6 +95,8 @@ class Result(ABC, Generic[T_co, E_co]):
 
 @final
 class Ok(Result[T_co, NoReturn], Generic[T_co]):
+    is_ok = True
+
     def __init__(self, o: T_co):
         """
         :param o: The value to contain.
@@ -92,6 +129,9 @@ class Ok(Result[T_co, NoReturn], Generic[T_co]):
         """
         return self
 
+    def flat_map(self, fn: Callable[[T_co], 'Result[U, F]']) -> 'Result[U, F]':
+        return fn(self._o)
+
     def match(self, if_ok: Callable[[T_co], U], if_err: Callable[[E_co], U]) -> U:
         """
         :param if_ok: The function to call on the contained value.
@@ -115,6 +155,8 @@ class Ok(Result[T_co, NoReturn], Generic[T_co]):
 
 @final
 class Err(Result[NoReturn, E_co], Generic[E_co]):
+    is_ok = False
+
     def __init__(self, e: E_co):
         """
         :param e: The error to contain.
@@ -147,7 +189,10 @@ class Err(Result[NoReturn, E_co], Generic[E_co]):
         """
         return Err(fn(self._e))
 
-    def match(self, if_ok: Callable[[T_co], U], if_err: Callable[[E_co], U]) -> U:
+    def flat_map(self, fn: Callable[[NoReturn], 'Result[U, F]']) -> 'Result[U, E_co]':
+        return self
+
+    def match(self, if_ok: Callable[[NoReturn], U], if_err: Callable[[E_co], U]) -> U:
         """
         :param if_ok: Unused.
         :param if_err: The function to call on the error.
