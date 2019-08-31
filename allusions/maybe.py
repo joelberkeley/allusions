@@ -1,18 +1,20 @@
 """
 :class:`Maybe` forms the root type of an ADT. Values of type :class:`Maybe` are either instances of :class:`Some` or
-:class:`Empty`. As an ADT, this would typically be used with pattern matching, which doesn't exist in Python. Instead,
-todo. For example:
+:class:`Empty`.
+
+Example usage::
 
     >>> def lookup(key: str, table: Mapping[str, int]) -> Maybe[int]:
-    ...     return Some(table[key]) if key in table else Empty
+    ...     return Some(table[key]) if key in table else Empty()
     ...
-    >>> animals = {'cat': 1, 'dog': 2}
+    >>> animals = {'cat': 6, 'dog': 3}
     >>> lookup('cat', animals).map(str)
-    Some('1')
-    >>> maybe = lookup('fish', animals).map(str)
-    >>> if maybe is Empty:  todo
-    ...     print('I wonder where that fish has gone ...')
-    I wonder where that fish has gone ...
+    Some('6')
+    >>> lookup('fish', animals).match(
+    ...     if_some=lambda count: 'Morning!' * count,
+    ...     if_empty=lambda: 'I wonder where that fish has gone ...'
+    ... )
+    'I wonder where that fish has gone ...'
 
 Aside from ``unwrap``, the API is purely functional.
 
@@ -21,7 +23,7 @@ type.
 """
 from abc import abstractmethod, ABC
 from typing import TypeVar, Generic, NoReturn, Callable, Any, Mapping
-from typing_extensions import final, Final
+from typing_extensions import final
 
 T_co = TypeVar('T_co', covariant=True)
 U = TypeVar('U')
@@ -56,11 +58,16 @@ class Maybe(ABC, Generic[T_co]):
         :return: A :class:`Maybe` formed by mapping `fn` over the contained value, if it exists.
         """
 
-    def match(self, some: Callable[[T_co], U], empty: Callable[[], U]) -> U:
+    @abstractmethod
+    def match(self, if_some: Callable[[T_co], U], if_empty: Callable[[], U]) -> U:
         """
-        :param some:
-        :param empty:
-        :return:
+        Uses dynamic dispatch to mimic rudimentary pattern matching on this instance. If the instance on which
+        this is called contains a value, call ``if_some`` with that value, and return its result. Else, call
+        ``if_empty`` and return its result.
+
+        :param if_some: The function to call with the contained value, if it exists.
+        :param if_empty: The function to call if the instance is empty.
+        :return: The return value of whichever of ``if_some`` and ``if_empty`` were executed.
         """
 
 
@@ -92,8 +99,13 @@ class Some(Maybe[T_co], Generic[T_co]):
         """
         return fn(self._o)
 
-    def match(self, some: Callable[[T_co], U], empty: Callable[[], U]) -> U:
-        return some(self._o)
+    def match(self, if_some: Callable[[T_co], U], if_empty: Callable[[], U]) -> U:
+        """
+        :param if_some: The function to apply to the contained value.
+        :param if_empty: Unused.
+        :return: The result of calling ``if_some`` on the contained value.
+        """
+        return if_some(self._o)
 
     def __eq__(self, other: Any) -> bool:
         if type(other) == Some:
@@ -130,8 +142,13 @@ class Empty(Maybe[NoReturn]):
         """
         return Empty()
 
-    def match(self, some: Callable[[NoReturn], U], empty: Callable[[], U]) -> U:
-        return empty()
+    def match(self, if_some: Callable[[NoReturn], U], if_empty: Callable[[], U]) -> U:
+        """
+        :param if_some: Unused.
+        :param if_empty: The function to call.
+        :return: The return value of ``if_empty``.
+        """
+        return if_empty()
 
     def __eq__(self, other: Any) -> bool:
         return True if type(other) == Empty else NotImplemented

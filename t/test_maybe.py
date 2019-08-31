@@ -62,12 +62,12 @@ def test_empty__flat_map(_, fn, exp) -> None:
 
 def test_some__match() -> None:
     # todo more test cases
-    assert Some(1).match(some=lambda x: x + 1, empty=lambda: 0) == 2
+    assert Some(1).match(if_some=lambda x: x + 1, if_empty=lambda: 0) == 2
 
 
 def test_empty__match() -> None:
     # todo more test cases
-    assert Empty().match(some=lambda x: x + 1, empty=lambda: 0) == 0
+    assert Empty().match(if_some=lambda x: x + 1, if_empty=lambda: 0) == 0
 
 
 @pytest.mark.parametrize('v', primitives())
