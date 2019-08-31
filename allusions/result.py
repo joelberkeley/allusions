@@ -1,6 +1,6 @@
 """
-Note we don't provide an unwrap method. For now, users must call `Ok(1).ok().unwrap()`. This is to limit imperative
-functionality to `Maybe`.
+Note we don't provide an unwrap method. Users must call `Ok(1).ok().unwrap()`. This is to limit imperative functionality
+to `Maybe`.
 """
 from abc import abstractmethod, ABC
 from typing import Generic, TypeVar, Callable, NoReturn, Any
@@ -44,10 +44,18 @@ class Result(ABC, Generic[T_co, E_co]):
             applying ``fn`` to the error contained in this instance.
         """
 
+    @abstractmethod
+    def match(self, if_ok: Callable[[T_co], U], if_err: Callable[[E_co], U]) -> U:
+        """
+        :param if_ok:
+        :param if_err:
+        :return:
+        """
+
 
 @final
 class Ok(Result[T_co, NoReturn], Generic[T_co]):
-    def __init__(self, o: T_co):  # todo use positional-only parameters in 3.8
+    def __init__(self, o: T_co):
         """
         :param o: The value to contain.
         """
@@ -71,6 +79,9 @@ class Ok(Result[T_co, NoReturn], Generic[T_co]):
     def map_err(self, fn: Any) -> 'Ok[T_co]':
         return self
 
+    def match(self, if_ok: Callable[[T_co], U], if_err: Callable[[E_co], U]) -> U:
+        return if_ok(self._o)
+
     def __eq__(self, other: Any) -> bool:
         if type(other) == Ok:
             return self._o == other.ok().unwrap()
@@ -78,7 +89,7 @@ class Ok(Result[T_co, NoReturn], Generic[T_co]):
         return NotImplemented
 
     def __hash__(self) -> int:
-        return hash(('Ok', self._o))
+        return hash(self._o)
 
     def __repr__(self) -> str:
         return f'Ok({self._o!r})'
@@ -110,6 +121,9 @@ class Err(Result[NoReturn, E_co], Generic[E_co]):
     def map_err(self, fn: Callable[[E_co], F]) -> 'Err[F]':
         return Err(fn(self._e))
 
+    def match(self, if_ok: Callable[[T_co], U], if_err: Callable[[E_co], U]) -> U:
+        return if_err(self._e)
+
     def __eq__(self, other: Any) -> bool:
         if type(other) == Err:
             return self._e == other.err().unwrap()
@@ -117,7 +131,7 @@ class Err(Result[NoReturn, E_co], Generic[E_co]):
         return NotImplemented
 
     def __hash__(self) -> int:
-        return hash(('Ok', self._e))
+        return hash(self._e)
 
     def __repr__(self) -> str:
         return f'Err({self._e!r})'
