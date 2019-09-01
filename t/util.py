@@ -1,3 +1,4 @@
+from collections import deque
 from typing import Any, List
 
 
@@ -11,3 +12,11 @@ def exceptions() -> List[Exception]:
 
 def primitives() -> List[Any]:
     return [None, True, False, -1, 0, 1, -1., 0., 1., 'a', 'z', '@']
+
+
+def collections() -> List[Any]:
+    return [list(), dict(), set(), frozenset(), deque()]
+
+
+def values() -> List[Any]:
+    return primitives() + collections() + exceptions()

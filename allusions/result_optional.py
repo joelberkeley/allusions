@@ -4,6 +4,8 @@
 error. If evaluation succeeds, the result of the expression is contained within an :class:`Ok`. If it fails, the error
 that occurred is contained within an :class:`Err`.
 
+This version uses Python's `typing.Optional` to communicate potentially missing values.
+
 Example usage::
 
     >>> class ParserError(ValueError): pass
@@ -18,19 +20,17 @@ Example usage::
     ...     return Ok(1./i) if i != 0 else Err(ZeroDivisionError())
     ...
     >>> results = [to_int(char).flat_map(inverse) for char in "1508�"]
-    >>> [res.ok().unwrap() for res in results if res.is_ok]
-    [1.0, 0.2, 0.125]
-    >>> [res.err().unwrap() for res in results if not res.is_ok]
+    >>> [res.ok() for res in results]
+    [1.0, 0.2, None, 0.125, None]
+    >>> [res.err() for res in results if not res.err() is not None]
     [ZeroDivisionError(), ParserError('�')]
 
-Note :class:`Result` doesn't define an analogue to the ``unwrap`` method on :class:`Maybe`. Users must instead call
-e.g. `Ok(1).ok().unwrap()`. This is to limit imperative functionality to :class:`Maybe`.
+Note :class:`Result` doesn't define an analogue to the ``unwrap`` method on :class:`Maybe`. Users must instead check
+for the nullity of ``ok`` or ``err``.
 """
 from abc import abstractmethod, ABC
-from typing import Generic, TypeVar, Callable, NoReturn, Any
+from typing import Generic, TypeVar, Callable, NoReturn, Any, Optional
 from typing_extensions import final
-
-from allusions.maybe import Maybe, Some, Empty
 
 T_co = TypeVar('T_co', covariant=True)
 E_co = TypeVar('E_co', covariant=True, bound=Exception)
@@ -41,23 +41,16 @@ F = TypeVar('F', bound=Exception)
 
 class Result(ABC, Generic[T_co, E_co]):
     """ A container for either the result of evaluating an expression, or the error that occurred during evaluation. """
-    @property
     @abstractmethod
-    def is_ok(self) -> bool:  # todo doesn't feel right - should drop this method?
+    def ok(self) -> Optional[T_co]:
         """
-        :return: `True` if this instance represents a successfully computed value, else `False`.
+        :return: The value, if it exists, else `None`.
         """
 
     @abstractmethod
-    def ok(self) -> Maybe[T_co]:
+    def err(self) -> Optional[E_co]:
         """
-        :return: A :class:`Some` containing the value, if it exists, else an :class:`Empty`.
-        """
-
-    @abstractmethod
-    def err(self) -> Maybe[E_co]:
-        """
-        :return: A :class:`Some` containing the error, if it exists, else an :class:`Empty`.
+        :return: The error, if it exists, else `None`.
         """
 
     @abstractmethod
@@ -105,17 +98,17 @@ class Ok(Result[T_co, NoReturn], Generic[T_co]):
         """
         self._o = o
 
-    def ok(self) -> 'Some[T_co]':
+    def ok(self) -> 'T_co':
         """
-        :return: The contained value, wrapped in a :class:`Some`.
+        :return: The contained value.
         """
-        return Some(self._o)
+        return self._o
 
-    def err(self) -> Empty:
+    def err(self) -> None:
         """
-        :return: An :class:`Empty`.
+        :return: `None`.
         """
-        return Empty()
+        return None
 
     def map_ok(self, fn: Callable[[T_co], U]) -> 'Ok[U]':
         """
@@ -144,7 +137,7 @@ class Ok(Result[T_co, NoReturn], Generic[T_co]):
 
     def __eq__(self, other: Any) -> bool:
         if type(other) == Ok:
-            return self._o == other.ok().unwrap()
+            return self._o == other.ok()
 
         return NotImplemented
 
@@ -165,17 +158,17 @@ class Err(Result[NoReturn, E_co], Generic[E_co]):
         """
         self._e = e
 
-    def ok(self) -> Empty:
+    def ok(self) -> None:
         """
-        :return: An :class:`Empty`.
+        :return: `None`.
         """
-        return Empty()
+        return None
 
-    def err(self) -> Some[E_co]:
+    def err(self) -> E_co:
         """
-        :return: The contained error, wrapped in a :class:`Some`.
+        :return: The contained error.
         """
-        return Some(self._e)
+        return self._e
 
     def map_ok(self, fn: Any) -> 'Err[E_co]':
         """
@@ -204,7 +197,7 @@ class Err(Result[NoReturn, E_co], Generic[E_co]):
 
     def __eq__(self, other: Any) -> bool:
         if type(other) == Err:
-            return self._e == other.err().unwrap()
+            return self._e == other.err()
 
         return NotImplemented
 

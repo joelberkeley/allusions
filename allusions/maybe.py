@@ -149,7 +149,10 @@ class Empty(Maybe[NoReturn]):
         return if_empty()
 
     def __eq__(self, other: Any) -> bool:
-        return True if type(other) == Empty else NotImplemented
+        if type(other) == Empty:
+            return True
+
+        return NotImplemented
 
     def __hash__(self) -> int:
         return 0
