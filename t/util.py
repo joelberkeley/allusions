@@ -1,21 +1,30 @@
+from __future__ import annotations
 from collections import deque
+from typing import Final
 
 
 class _A:
     pass
 
 
-def exceptions() -> list[Exception]:
-    return [Exception(), ValueError(), TypeError(), KeyError(), IndexError()]
+# todo list, set and dict are primitives, no? but they're also collections, so how to sort?
+PRIMITIVES: Final[tuple[object, ...]] = (None, True, False, -1, 0, 1, -1., 0., 1., 'a', 'z', '@')
 
+COLLECTIONS: Final[tuple[object, ...]] = (
+    tuple(),
+    (1, ('a', (True,))),
+    list(),
+    [1, ['a', [True]]],
+    dict(),
+    {1: {'a': {True: None}}},
+    set(),
+    {1, {'a', {True}}},
+    frozenset(),
+    frozenset({1, {'a', {True}}}),
+    deque(),
+    deque([1, ['a', [True]]]),
+)
 
-def primitives() -> list[object]:
-    return [None, True, False, -1, 0, 1, -1., 0., 1., 'a', 'z', '@']
+EXCEPTIONS: Final[tuple[Exception, ...]] = (Exception(), ValueError(), TypeError(), KeyError())
 
-
-def collections() -> list[object]:
-    return [list(), dict(), set(), frozenset(), deque()]
-
-
-def values() -> list[object]:
-    return primitives() + collections() + exceptions()
+VALUES: Final[tuple[object, ...]] = PRIMITIVES + EXCEPTIONS + COLLECTIONS + (_A(),)

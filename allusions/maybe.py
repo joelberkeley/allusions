@@ -1,6 +1,6 @@
 """
-:class:`Maybe` forms the root type of an ADT. Values of type :class:`Maybe` are either instances of :class:`Some` or
-:class:`Empty`.
+:class:`Maybe` forms the root type of an ADT. Values of type :class:`Maybe` are either instances of
+:class:`Some` or class:`Empty`.
 
 Example usage::
 
@@ -20,15 +20,15 @@ Example usage::
 from __future__ import annotations
 from abc import abstractmethod, ABC
 from collections.abc import Callable, Mapping
-from typing import TypeVar, Generic, NoReturn
+from typing import Generic, NoReturn
 from typing_extensions import final
 
-T_co = TypeVar('T_co', covariant=True)
-U = TypeVar('U')
+from allusions.types import T_co, U
 
 
 class Maybe(ABC, Generic[T_co]):
     """ Container that may or may not contain a value. """
+
     @abstractmethod
     def unwrap(self) -> T_co:
         """
@@ -39,8 +39,8 @@ class Maybe(ABC, Generic[T_co]):
     @abstractmethod
     def map(self, fn: Callable[[T_co], U]) -> Maybe[U]:
         """
-        If this is a :class:`Some`, apply the function ``fn`` to the contained value and return it in a :class:`Some`.
-        Else return an :class:`Empty`.
+        If this is a :class:`Some`, apply the function ``fn`` to the contained value and return it
+        in a :class:`Some`. Else return an :class:`Empty`.
 
         :param fn: The function to apply to the contained value.
         :return: A :class:`Maybe` formed by mapping `fn` over the contained value, if it exists.
@@ -49,8 +49,8 @@ class Maybe(ABC, Generic[T_co]):
     @abstractmethod
     def flat_map(self, fn: Callable[[T_co], Maybe[U]]) -> Maybe[U]:
         """
-        If this is a :class:`Some`, apply the function ``fn`` to the contained value and return the result. Else return
-        an :class:`Empty`.
+        If this is a :class:`Some`, apply the function ``fn`` to the contained value and return the
+        result. Else return an :class:`Empty`.
 
         :param fn: The function to apply to the contained value.
         :return: A :class:`Maybe` formed by mapping `fn` over the contained value, if it exists.
@@ -59,9 +59,9 @@ class Maybe(ABC, Generic[T_co]):
     @abstractmethod
     def match(self, if_some: Callable[[T_co], U], if_empty: Callable[[], U]) -> U:
         """
-        Uses dynamic dispatch to mimic rudimentary pattern matching on this instance. If the instance on which
-        this is called contains a value, call ``if_some`` with that value, and return its result. Else, call
-        ``if_empty`` and return its result.
+        Uses dynamic dispatch to mimic rudimentary pattern matching on this instance. If the
+        instance on which this is called contains a value, call ``if_some`` with that value, and
+        return its result. Else, call ``if_empty`` and return its result.
 
         :param if_some: The function to call with the contained value, if it exists.
         :param if_empty: The function to call if the instance is empty.
@@ -70,8 +70,9 @@ class Maybe(ABC, Generic[T_co]):
 
 
 @final
-class Some(Maybe[T_co], Generic[T_co]):
+class Some(Maybe[T_co]):
     """ Implementation of :class:`Result` for the case where a value exists. """
+
     def __init__(self, o: T_co):
         """
         :param o: The value to contain.
@@ -98,7 +99,7 @@ class Some(Maybe[T_co], Generic[T_co]):
         """
         return fn(self._o)
 
-    def match(self, if_some: Callable[[T_co], U], if_empty: Callable[[], U]) -> U:
+    def match(self, *, if_some: Callable[[T_co], U], if_empty: Callable[[], U]) -> U:
         """
         :param if_some: The function to apply to the contained value.
         :param if_empty: Unused.
@@ -116,12 +117,13 @@ class Some(Maybe[T_co], Generic[T_co]):
         return hash(self._o)
 
     def __repr__(self) -> str:
-        return f'Some({self._o!r})'
+        return f"Some({self._o!r})"
 
 
 @final
 class Empty(Maybe[NoReturn]):
     """ Implementation of :class:`Result` for the case where no value exists. """
+
     def unwrap(self) -> NoReturn:
         """
         :raise ValueError: Always.
@@ -160,4 +162,4 @@ class Empty(Maybe[NoReturn]):
         return 0
 
     def __repr__(self) -> str:
-        return 'Empty()'
+        return "Empty()"
