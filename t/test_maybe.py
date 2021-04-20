@@ -1,11 +1,18 @@
+from collections.abc import Callable
+from typing import TypeVar
+
 import pytest
 
-from allusions import Some, Empty
+from allusions import Some, Empty, Maybe
 from t.util import primitives, values
 
 
+_T = TypeVar("_T")
+_U = TypeVar("_U")
+
+
 @pytest.mark.parametrize('v', primitives())
-def test_some__unwrap_returns_original_object(v) -> None:
+def test_some__unwrap_returns_original_object(v: object) -> None:
     assert Some(v).unwrap() is v
 
 
@@ -14,7 +21,7 @@ def test_empty__unwrap_raises_error() -> None:
         Empty().unwrap()
 
 
-def _map_test_cases():
+def _map_test_cases() -> list[tuple[_T, Callable[[_T], object]]]:
     return [
         (1, lambda x: x + 1),
         ('a', lambda s: s * 3)
@@ -23,16 +30,16 @@ def _map_test_cases():
 
 
 @pytest.mark.parametrize('v, fn', _map_test_cases())
-def test_some__map(v, fn) -> None:
+def test_some__map(v: _T, fn: Callable[[_T], object]) -> None:
     assert Some(v).map(fn) == Some(fn(v))
 
 
 @pytest.mark.parametrize('_, fn', _map_test_cases())
-def test_empty__map(_, fn) -> None:
+def test_empty__map(_, fn: Callable[[object], object]) -> None:
     assert Empty().map(fn) == Empty()
 
 
-def _flat_map_test_cases():
+def _flat_map_test_cases() -> list[tuple[_T, Callable[[_T], Maybe[_U]], Maybe[_U]]]:
     return [
         (1, lambda x: Some(x + 1), Some(2)),
         (1, lambda x: Empty(), Empty())
@@ -41,12 +48,12 @@ def _flat_map_test_cases():
 
 
 @pytest.mark.parametrize('v, fn, exp', _flat_map_test_cases())
-def test_some__flat_map(v, fn, exp) -> None:
+def test_some__flat_map(v: _T, fn: Callable[[_T], Maybe[_U]], exp: Maybe[_U]) -> None:
     assert Some(v).flat_map(fn) == exp
 
 
 @pytest.mark.parametrize('_, fn, exp', _flat_map_test_cases())
-def test_empty__flat_map(_, fn, exp) -> None:
+def test_empty__flat_map(_: object, fn: Callable[[object], Maybe[_U]], exp: Maybe[_U]) -> None:
     assert Empty().flat_map(fn) == Empty()
 
 
@@ -69,13 +76,14 @@ def test_empty__match(if_some, if_empty, exp) -> None:
 
 
 @pytest.mark.parametrize('v', primitives())
-def test_some__eq_is_reflexive(v) -> None:
+def test_some__eq_is_reflexive(v: object) -> None:
     some = Some(v)
     assert some == some
 
 
+# todo shouldn't we be testing lhs is the same as rhs, not that they're both equal?
 @pytest.mark.parametrize('first, second', [(v, v) for v in primitives()])
-def test_some__eq_is_symmetric(first, second) -> None:
+def test_some__eq_is_symmetric(first: _T, second: _T) -> None:
     assert Some(first) == Some(second) and Some(second) == Some(first)
 
 

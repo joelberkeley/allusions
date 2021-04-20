@@ -17,8 +17,10 @@ Example usage::
     'I wonder where that fish has gone ...'
 
 """
+from __future__ import annotations
 from abc import abstractmethod, ABC
-from typing import TypeVar, Generic, NoReturn, Callable, Any, Mapping
+from collections.abc import Callable, Mapping
+from typing import TypeVar, Generic, NoReturn
 from typing_extensions import final
 
 T_co = TypeVar('T_co', covariant=True)
@@ -35,7 +37,7 @@ class Maybe(ABC, Generic[T_co]):
         """
 
     @abstractmethod
-    def map(self, fn: Callable[[T_co], U]) -> 'Maybe[U]':
+    def map(self, fn: Callable[[T_co], U]) -> Maybe[U]:
         """
         If this is a :class:`Some`, apply the function ``fn`` to the contained value and return it in a :class:`Some`.
         Else return an :class:`Empty`.
@@ -45,7 +47,7 @@ class Maybe(ABC, Generic[T_co]):
         """
 
     @abstractmethod
-    def flat_map(self, fn: Callable[[T_co], 'Maybe[U]']) -> 'Maybe[U]':
+    def flat_map(self, fn: Callable[[T_co], Maybe[U]]) -> Maybe[U]:
         """
         If this is a :class:`Some`, apply the function ``fn`` to the contained value and return the result. Else return
         an :class:`Empty`.
@@ -82,14 +84,14 @@ class Some(Maybe[T_co], Generic[T_co]):
         """
         return self._o
 
-    def map(self, fn: Callable[[T_co], U]) -> 'Some[U]':
+    def map(self, fn: Callable[[T_co], U]) -> Some[U]:
         """
         :param fn: The function to apply to the contained value.
         :return: A :class:`Some` containing the result of applying ``fn`` to this instance's contained value.
         """
         return Some(fn(self._o))
 
-    def flat_map(self, fn: Callable[[T_co], 'Maybe[U]']) -> 'Maybe[U]':
+    def flat_map(self, fn: Callable[[T_co], Maybe[U]]) -> Maybe[U]:
         """
         :param fn: The function to apply to the contained value.
         :return: The result of applying ``fn`` to the contained value.
@@ -104,7 +106,7 @@ class Some(Maybe[T_co], Generic[T_co]):
         """
         return if_some(self._o)
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         if type(other) == Some:
             return self._o == other.unwrap()
 
@@ -126,14 +128,14 @@ class Empty(Maybe[NoReturn]):
         """
         raise ValueError("No such value.")
 
-    def map(self, fn: Callable[[T_co], U]) -> 'Empty':
+    def map(self, fn: Callable[[T_co], U]) -> Empty:
         """
         :param fn: Unused.
         :return: An :class:`Empty`.
         """
         return Empty()
 
-    def flat_map(self, fn: Callable[[T_co], 'Maybe[U]']) -> 'Empty':
+    def flat_map(self, fn: Callable[[T_co], Maybe[U]]) -> Empty:
         """
         :param fn: Unused.
         :return: An :class:`Empty`.
@@ -148,7 +150,7 @@ class Empty(Maybe[NoReturn]):
         """
         return if_empty()
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         if type(other) == Empty:
             return True
 

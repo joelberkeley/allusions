@@ -1,22 +1,21 @@
 from collections import deque
-from typing import Any, List
 
 
 class _A:
     pass
 
 
-def exceptions() -> List[Exception]:
+def exceptions() -> list[Exception]:
     return [Exception(), ValueError(), TypeError(), KeyError(), IndexError()]
 
 
-def primitives() -> List[Any]:
+def primitives() -> list[object]:
     return [None, True, False, -1, 0, 1, -1., 0., 1., 'a', 'z', '@']
 
 
-def collections() -> List[Any]:
+def collections() -> list[object]:
     return [list(), dict(), set(), frozenset(), deque()]
 
 
-def values() -> List[Any]:
+def values() -> list[object]:
     return primitives() + collections() + exceptions()
