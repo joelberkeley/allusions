@@ -1,5 +1,7 @@
 # allusions
 
-Python implementations of niceties found in other languages.
+Python implementations of niceties from other languages.
 
-We attempt to be pythonic where possible, but due to the nature of the project, it is not our primary aim.
+# License
+
+[Apache License](LICENSE)
