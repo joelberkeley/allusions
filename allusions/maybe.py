@@ -157,7 +157,7 @@ class Empty(Maybe[NoReturn]):
         """
         return Empty()
 
-    def match(self, if_some: Callable[[NoReturn], U], if_empty: Callable[[], U]) -> U:
+    def match(self, *, if_some: Callable[[NoReturn], U], if_empty: Callable[[], U]) -> U:
         """
         :param if_some: Unused.
         :param if_empty: The function to call.
