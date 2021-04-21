@@ -35,36 +35,36 @@ def test_empty_unwrap_raises_error() -> None:
         Empty().unwrap()
 
 
-_map_test_cases: Final = [
+_MAP_TEST_CASES: Final = [
     (1, lambda x: x + 1),
     ('a', lambda s: s * 3)
     # todo more test cases
 ]
 
 
-@pytest.mark.parametrize('v, fn', _map_test_cases)
+@pytest.mark.parametrize('v, fn', _MAP_TEST_CASES)
 def test_some_map(v: _T, fn: Callable[[_T], object]) -> None:
     assert Some(v).map(fn) == Some(fn(v))
 
 
-@pytest.mark.parametrize('_, fn', _map_test_cases)
+@pytest.mark.parametrize('_, fn', _MAP_TEST_CASES)
 def test_empty_map(_: object, fn: Callable[[object], object]) -> None:
     assert Empty().map(fn) == Empty()
 
 
-_flat_map_test_cases: Final = [
+_FLATMAP_TEST_CASES: Final = [
     (1, lambda x: Some(x + 1), Some(2)),
     (1, lambda x: Empty(), Empty())
     # todo more test cases
 ]
 
 
-@pytest.mark.parametrize('v, fn, exp', _flat_map_test_cases)
+@pytest.mark.parametrize('v, fn, exp', _FLATMAP_TEST_CASES)
 def test_some_flat_map(v: _T, fn: Callable[[_T], Maybe[_U]], exp: Maybe[_U]) -> None:
     assert Some(v).flat_map(fn) == exp
 
 
-@pytest.mark.parametrize('_v, fn, _exp', _flat_map_test_cases)
+@pytest.mark.parametrize('_v, fn, _exp', _FLATMAP_TEST_CASES)
 def test_empty_flat_map(_v: object, fn: Callable[[object], Maybe[_U]], _exp: object) -> None:
     assert Empty().flat_map(fn) == Empty()
 
