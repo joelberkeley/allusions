@@ -11,9 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License
+""" Type utilities. """
 from typing import TypeVar
 
 T = TypeVar("T")
+""" An unbound type variable. """
+
 U = TypeVar('U')
+""" An unbound type variable. """
 
 T_co = TypeVar('T_co', covariant=True)
+""" An unbound covariant type variable. """
