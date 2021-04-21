@@ -18,14 +18,14 @@ from typing import TypeVar, Final
 import pytest
 
 from allusions.maybe import Some, Empty, Maybe
-from t.util import PRIMITIVES, VALUES
+from t.util import VALUES, is_hashable
 
 
 _T = TypeVar("_T")
 _U = TypeVar("_U")
 
 
-@pytest.mark.parametrize('v', PRIMITIVES)
+@pytest.mark.parametrize('v', VALUES)
 def test_some_unwrap_returns_original_object(v: object) -> None:
     assert Some(v).unwrap() is v
 
@@ -89,14 +89,14 @@ def test_empty_match(if_some: Callable[[object], _U], if_empty: Callable[[], _U]
     assert Empty().match(if_some=if_some, if_empty=if_empty) == exp
 
 
-@pytest.mark.parametrize('v', PRIMITIVES)
+@pytest.mark.parametrize('v', VALUES)
 def test_some_eq_is_reflexive(v: object) -> None:
     some = Some(v)
     assert some == some
 
 
-@pytest.mark.parametrize('first', PRIMITIVES)
-@pytest.mark.parametrize('second', PRIMITIVES)
+@pytest.mark.parametrize('first', VALUES)
+@pytest.mark.parametrize('second', VALUES)
 def test_some_eq_is_symmetric(first: object, second: object) -> None:
     assert (Some(first) == Some(second)) == (Some(second) == Some(first))
 
@@ -105,8 +105,8 @@ def test_empty_eq_is_reflexive_and_symmetric() -> None:
     assert Empty() == Empty()
 
 
-@pytest.mark.parametrize('first', PRIMITIVES)
-@pytest.mark.parametrize('second', PRIMITIVES)
+@pytest.mark.parametrize('first', VALUES)
+@pytest.mark.parametrize('second', VALUES)
 def test_some_neq_is_symmetric(first: object, second: object) -> None:
     assert (Some(first) != Some(second)) == (Some(second) != Some(first))
 
@@ -119,7 +119,7 @@ def test_some_and_empty_are_not_equal(v: object) -> None:
 # todo test eq and neq are transitive
 
 
-@pytest.mark.parametrize('hashable', PRIMITIVES + (frozenset(),))
+@pytest.mark.parametrize('hashable', filter(is_hashable, VALUES))
 def test_some_is_hashable_if_contents_are_hashable(hashable: Hashable) -> None:
     {Some(hashable)}
 
