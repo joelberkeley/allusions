@@ -45,13 +45,16 @@ from __future__ import annotations
 from abc import abstractmethod, ABC
 from collections.abc import Callable
 from typing import Generic, NoReturn, TypeVar
-from typing_extensions import final
+from typing_extensions import final, Final
 
 from allusions.maybe import Maybe, Some, Empty
 from allusions.types import T_co, U
 
 E = TypeVar('E', bound=Exception)
+""" Type variable bound to :class:`Exception`. """
+
 E_co = TypeVar('E_co', covariant=True, bound=Exception)
+""" Covariant type variable bound to :class:`Exception`. """
 
 
 class Result(ABC, Generic[T_co, E_co]):
@@ -64,7 +67,7 @@ class Result(ABC, Generic[T_co, E_co]):
     @abstractmethod
     def is_ok(self) -> bool:
         """
-        :return: `True` if this instance represents a successfully computed value, else `False`.
+        `True` if this instance represents a successfully computed value, else `False`.
         """
 
     @abstractmethod
@@ -116,7 +119,7 @@ class Result(ABC, Generic[T_co, E_co]):
 
 @final
 class Ok(Result[T_co, NoReturn]):
-    is_ok = True
+    is_ok: Final = True
 
     def __init__(self, o: T_co):
         """
@@ -176,7 +179,7 @@ class Ok(Result[T_co, NoReturn]):
 
 @final
 class Err(Result[NoReturn, E_co]):
-    is_ok = False
+    is_ok: Final = False
 
     def __init__(self, e: E_co):
         """

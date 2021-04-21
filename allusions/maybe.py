@@ -84,7 +84,7 @@ class Maybe(ABC, Generic[T_co]):
 
 @final
 class Some(Maybe[T_co]):
-    """ Implementation of :class:`Result` for the case where a value exists. """
+    """ Implementation of :class:`Maybe` for the case where a value exists. """
 
     def __init__(self, o: T_co):
         """
@@ -135,7 +135,7 @@ class Some(Maybe[T_co]):
 
 @final
 class Empty(Maybe[NoReturn]):
-    """ Implementation of :class:`Result` for the case where no value exists. """
+    """ Implementation of :class:`Maybe` for the case where no value exists. """
 
     def unwrap(self) -> NoReturn:
         """
