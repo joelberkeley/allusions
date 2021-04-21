@@ -15,7 +15,7 @@ from __future__ import annotations
 from collections.abc import Hashable
 from typing import Final
 
-COLLECTIONS: Final = (
+COLLECTIONS: Final[tuple[object, ...]] = (
     (1, ('a', ())),
     [1, ['a', []]],
     {1: {'a': {}}},
