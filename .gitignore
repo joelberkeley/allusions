@@ -1,3 +1,9 @@
+### Custom ignores
+
+.idea
+
+### GitHub auto-generated python ignores
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
