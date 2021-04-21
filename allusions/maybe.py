@@ -33,7 +33,7 @@ Example usage::
 from __future__ import annotations
 from abc import abstractmethod, ABC
 from collections.abc import Callable, Mapping
-from typing import Generic, NoReturn
+from typing import Generic, NoReturn, cast
 from typing_extensions import final
 
 from allusions.types import T_co, U
@@ -70,7 +70,7 @@ class Maybe(ABC, Generic[T_co]):
         """
 
     @abstractmethod
-    def match(self, if_some: Callable[[T_co], U], if_empty: Callable[[], U]) -> U:
+    def match(self, *, if_some: Callable[[T_co], U], if_empty: Callable[[], U]) -> U:
         """
         Uses dynamic dispatch to mimic rudimentary pattern matching on this instance. If the
         instance on which this is called contains a value, call ``if_some`` with that value, and
@@ -122,7 +122,7 @@ class Some(Maybe[T_co]):
 
     def __eq__(self, other: object) -> bool:
         if type(other) == Some:
-            return self._o == other.unwrap()
+            return self._o == cast(Some, other).unwrap()
 
         return NotImplemented
 
