@@ -31,9 +31,9 @@ COLLECTIONS: Final[tuple[object, ...]] = (
     dict(),
     {1: {'a': {True: None}}},
     set(),
-    {1, {'a', {True}}},
+    {1, 'a', True},
     frozenset(),
-    frozenset({1, {'a', {True}}}),
+    frozenset({1, frozenset({'a', frozenset({True})})}),
     deque(),
     deque([1, ['a', [True]]]),
 )
